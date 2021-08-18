@@ -121,6 +121,7 @@ param resource_types default [
 	"aws_workspace",
 	"aws_ssm_activation",
 	"aws_iam_role",
+	"aws_iam_policy",
 	"aws_waf_rate_based_rule",
 	"aws_dx_hosted_transit_virtual_interface_accepter",
 	"aws_route53_health_check",
@@ -200,7 +201,6 @@ param resource_types default [
 	"aws_docdb_subnet_group",
 	"aws_ec2_client_vpn_endpoint",
 	"aws_backup_plan",
-	"aws_autoscaling_group",
 	"aws_eks_fargate_profile",
 	"aws_rds_cluster_parameter_group",
 	"aws_datasync_agent",
@@ -287,13 +287,19 @@ allAWSResourcesWithStandardTags =
 
 # Filter to AWS resources with violations
 # Warnings will be printed for all violations since the last parameter is true
-violatingAWSResources =
+violatingAWSResourcesTag =
         plan.filter_attribute_not_contains_list(allAWSResourcesWithStandardTags,
                         "tags", mandatory_tags, true)
 
-print(length(violatingAWSResources["messages"]))
+violatingAWSResourcesTagAll =
+        plan.filter_attribute_not_contains_list(allAWSResourcesWithStandardTags,
+                        "tags_all", mandatory_tags, true)
+
+print("tag", length(violatingAWSResourcesTag["messages"]))
+print("tag_all", length(violatingAWSResourcesTagAll["messages"]))
+print ("Scanned for tag and tag_all field. If the resource isn't present in any of them, Policy will FAIL")
 
 # Main rule
 main = rule {
-  length(violatingAWSResources["messages"]) is 0
+  (length(violatingAWSResourcesTag["messages"]) is 0 or length(violatingAWSResourcesTagAll["messages"]) is 0)
 }
